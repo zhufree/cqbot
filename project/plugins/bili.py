@@ -1,7 +1,7 @@
 from nonebot import on_command, CommandSession
 from pyquery import PyQuery as pq
 import requests,json
-import time;
+import time
 
 @on_command('新番', aliases=('新番时间表'))
 async def _(session: CommandSession):
@@ -36,7 +36,24 @@ async def get_time_line(a_type):
         'title': s['title'],
         'link':'https://www.bilibili.com/bangumi/play/ss' + str(s['season_id']),
         'time': s['pub_time'],
-        'index':s['pub_index']
+        'index':s['pub_index'] if s.get('pub_index') is not None else "",
         } for s in today_line]
     
     return result_line
+
+# args_parser 装饰器将函数声明为 weather 命令的参数解析器
+# 命令解析器用于将用户输入的参数解析成命令真正需要的数据
+@_.args_parser
+async def _(session: CommandSession):
+    # 去掉消息首尾的空白符
+    stripped_arg = session.current_arg_text.strip()
+
+    if session.is_first_run:
+        # 该命令第一次运行（第一次进入命令会话）
+        if stripped_arg:
+            session.state['type'] = stripped_arg
+        return
+
+    if not stripped_arg:
+        session.pause('国创or番剧？')
+    session.state[session.current_key] = stripped_arg
